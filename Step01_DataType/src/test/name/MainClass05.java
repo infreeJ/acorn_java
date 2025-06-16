@@ -11,6 +11,6 @@ public class MainClass05 {
 		
 		
 		int num = 10;
-		String yourNameString = "해골";
+		String yourNameString = "주뎅이";
 	}
 }
