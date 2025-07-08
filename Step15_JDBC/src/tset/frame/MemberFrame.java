@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
 import java.util.List;
+import java.util.Scanner;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -23,27 +24,33 @@ public class MemberFrame extends JFrame{
 	JTextField inputName, inputAddr;
 	// 표 형식으로 정보를 출력할 UI
 	JTable table;
-	// JTable에 정보를 출력할 data를 곡급해줄 모델 객체
+	// JTable에 정보를 출력할 data를 공급해줄 모델 객체
 	DefaultTableModel model;
 	MemberDao dao = new MemberDao();
 	
+	
 	//생성자
 	public MemberFrame() {
-		var dto = new MemberDto();
+		
+		
 		//레이아웃 설정
 		setLayout(new BorderLayout());
 		//JLable 2개
 		JLabel label1=new JLabel("이름");
 		JLabel label2=new JLabel("주소");
+		
 		//JTextField 1개
 		inputName=new JTextField(10);
 		inputAddr=new JTextField(10);
 		// JButton
 		JButton insertBtn = new JButton("저장");
 		JButton deleteBtn = new JButton("삭제");
+		JButton updateBtn = new JButton("수정");
 		
 		// 버튼의 동작
 		insertBtn.addActionListener((e) -> {
+			var dto = new MemberDto();
+			dao = new MemberDao();
 			// 입력한 이름과 주소를 읽어와서
 			var name = inputName.getText();
 			var addr = inputAddr.getText();
@@ -62,8 +69,60 @@ public class MemberFrame extends JFrame{
 			}
 		});
 		
+		// 수정 버튼을 눌렀을 때 실행할 함수 등록(내꺼)
+		updateBtn.addActionListener((e) -> {
+			MemberDto dto = new MemberDto();
+			dao = new MemberDao();
+			var name = inputName.getText();
+			var addr = inputAddr.getText();
+			int selectedRow = table.getSelectedRow();
+			if(selectedRow == -1) {
+				JOptionPane.showMessageDialog(this, "수정할 row를 선택해주세요");
+				return; // 메서드를 종료
+			}
+			int updateNum = (int)model.getValueAt(selectedRow, 0);
+			
+			dto.setName(name);
+			dto.setAddr(addr);
+			dto.setNum(updateNum);
+			boolean isSuccess = dao.update(dto);
+			
+			printMember();
+			if(isSuccess) {
+				JOptionPane.showMessageDialog(this, "수정 성공");
+			} else {
+				JOptionPane.showMessageDialog(this, "수정 실패");
+			}
+		});
+		
+		
+	
+		
+		//버튼의 동작
+		insertBtn.addActionListener((e)->{
+			//입력한 이름과, 주소를 읽어와서
+			var name=inputName.getText();
+			var addr=inputAddr.getText();
+			//MemberDto 객체에 이름과 주소를 담는다.
+			var dto=new MemberDto();
+			dto.setName(name);
+			dto.setAddr(addr);
+			//MemberDao 객체를 이용해서 DB 에 저장하기
+			var isSuccess=dao.insert(dto);
+			if(isSuccess) {
+				// this 는 나의 참조값 ( 나 => MemberFrame 객체 => Component type 이기도 하다)
+				JOptionPane.showMessageDialog(this, "추가 했습니다");
+			}else {
+				JOptionPane.showMessageDialog(this, "추가 실패!");
+			}
+			printMember();
+		});;
+		
+		
+		
 		// 삭제 버튼을 눌렀을 때 실행할 함수 등록
 		deleteBtn.addActionListener((e) -> {
+			dao = new MemberDao();
 			// 선택된 row의 index 값을 읽어온다.
 			int selectedRow = table.getSelectedRow();
 			// 선택된 row가 없다면
@@ -90,8 +149,11 @@ public class MemberFrame extends JFrame{
 		panel.add(inputName);
 		panel.add(label2);
 		panel.add(inputAddr);
+//		panel.add(label3);
+//		panel.add(inputNum);
 		panel.add(insertBtn);
 		panel.add(deleteBtn);
+		panel.add(updateBtn);
 		//페널의 배경색 설정 
 		panel.setBackground(Color.orange);
 		//페널을 프레임의 위쪽에 배치
@@ -126,6 +188,7 @@ public class MemberFrame extends JFrame{
 	
 	// 회원 목록을 출력하는 메서드
 	public void printMember() {
+		
 		// 기존에 출력된 내용을 모두 삭제하고
 		model.setRowCount(0);
 		List<MemberDto> list = dao.selectAll();
